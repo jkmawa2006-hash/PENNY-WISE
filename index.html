@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PENNY-WISE – Personal Finance Manager</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="auth-overlay" id="auth-overlay">
+  <div class="auth-box" id="auth-login">
+    <div class="auth-logo">💰 PENNY-WISE</div>
+    <div class="auth-sub">Sign in to your account</div>
+    <div class="form-group">
+      <input type="text" id="login-username" placeholder="Username" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+    </div>
+    <button class="btn btn-primary" onclick="login()">Sign In</button>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-toggle">Don't have an account? <a onclick="showRegister()">Create one</a></div>
+  </div>
+  <div class="auth-box" id="auth-register" style="display:none;">
+    <div class="auth-logo">💰 PENNY-WISE</div>
+    <div class="auth-sub">Create your account</div>
+    <div class="form-group">
+      <input type="text" id="reg-username" placeholder="Choose a username" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <input type="password" id="reg-password" placeholder="Password" autocomplete="new-password" />
+    </div>
+    <div class="form-group">
+      <input type="password" id="reg-confirm" placeholder="Confirm password" autocomplete="new-password" />
+    </div>
+    <button class="btn btn-primary" onclick="register()">Create Account</button>
+    <div class="auth-error" id="auth-error-reg"></div>
+    <div class="auth-toggle">Already have an account? <a onclick="showLogin()">Sign in</a></div>
+  </div>
+</div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">💰</div>
+      PENNY-WISE
+    </div>
+    <nav class="side-nav">
+      <span class="section-label">Menu</span>
+      <button class="nav-item active" onclick="showSection('dashboard')"><span class="icon">📊</span> Dashboard</button>
+      <button class="nav-item" onclick="showSection('transactions')"><span class="icon">💳</span> Transactions</button>
+      <button class="nav-item" onclick="showSection('income')"><span class="icon">💵</span> Income</button>
+      <button class="nav-item" onclick="showSection('budgets')"><span class="icon">🎯</span> Budgets</button>
+      <button class="nav-item" onclick="showSection('goals')"><span class="icon">🏆</span> Goals</button>
+      <button class="nav-item" onclick="showSection('reports')"><span class="icon">📈</span> Reports</button>
+      <button class="nav-item" onclick="showSection('calendar')"><span class="icon">📅</span> Calendar</button>
+      <button class="nav-item" onclick="showSection('networth')"><span class="icon">🏦</span> Net Worth</button>
+      <button class="nav-item" onclick="showSection('debts')"><span class="icon">💳</span> Debts</button>
+      <button class="nav-item" onclick="showSection('subscriptions')"><span class="icon">📋</span> Subscriptions</button>
+      <button class="nav-item" onclick="showSection('investments')"><span class="icon">📈</span> Investments</button>
+      <button class="nav-item" onclick="showSection('admin')"><span class="icon">🔐</span> Admin</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" title="Toggle theme">🌙</div>
+      <div class="user-badge" id="user-badge">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span class="user-name" id="user-name">User</span>
+        <button class="logout-btn" onclick="logout()">↩</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-subtitle" id="page-subtitle">Your financial overview at a glance</div>
+      </div>
+      <div class="month-selector">
+        <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+        <span id="month-label">June 2026</span>
+        <button class="month-btn" onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card income">
+        <span class="kpi-icon">📥</span>
+        <div class="kpi-label">Total Income</div>
+        <div class="kpi-value" id="kpi-income">৳0</div>
+        <div class="kpi-change" id="kpi-income-sub">This month</div>
+      </div>
+      <div class="kpi-card expense">
+        <span class="kpi-icon">📤</span>
+        <div class="kpi-label">Total Expenses</div>
+        <div class="kpi-value" id="kpi-expense">৳0</div>
+        <div class="kpi-change" id="kpi-expense-sub">This month</div>
+      </div>
+      <div class="kpi-card balance">
+        <span class="kpi-icon">⚖️</span>
+        <div class="kpi-label">Net Balance</div>
+        <div class="kpi-value" id="kpi-balance">৳0</div>
+        <div class="kpi-change">Income – Expenses</div>
+      </div>
+      <div class="kpi-card budget-remaining">
+        <span class="kpi-icon">💎</span>
+        <div class="kpi-label">Budget Remaining</div>
+        <div class="kpi-value" id="kpi-budget">৳0</div>
+        <div class="kpi-change">Across all categories</div>
+      </div>
+    </div>
+
+    <div id="section-dashboard">
+      <div class="charts-grid">
+        <div class="chart-card wide">
+          <div class="chart-title">
+            Income vs Expense Trend
+            <span class="chart-badge">Line</span>
+          </div>
+          <div class="chart-wrap tall"><canvas id="lineChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">
+            Expense by Category
+            <span class="chart-badge">Donut</span>
+          </div>
+          <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">
+            Monthly Comparison
+            <span class="chart-badge">Bar</span>
+          </div>
+          <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-card wide" id="insights-panel">
+        <div class="chart-title">💡 Spending Insights</div>
+        <div id="insights-panel-content"></div>
+      </div>
+      <div class="chart-card wide">
+        <div class="chart-title">📊 Statistics Summary</div>
+        <div id="stats-panel"></div>
+      </div>
+    </div>
+
+    <div id="section-transactions" style="display:none">
+      <div class="section-wrap">
+
+        <div class="panel">
+          <div class="panel-title">➕ Add Transaction</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="tx-desc" placeholder="e.g. Grocery shopping" />
+            </div>
+            <div class="form-group">
+              <label>Amount ($)</label>
+              <input type="number" id="tx-amount" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="tx-type">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="tx-category"></select>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="tx-date" />
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="addTransaction()">➕ Add Transaction</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All</button>
+            <button class="btn btn-warning" onclick="exportCSV()">📥 Export CSV</button>
+            <button class="btn" onclick="backupData()">💾 Backup</button>
+            <button class="btn" onclick="restoreData()">📂 Restore</button>
+            <input type="file" id="restore-input" accept=".json" style="display:none" onchange="handleRestore(event)" />
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">🔄 Recurring Transactions</div>
+          <div class="form-grid" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="rec-desc" placeholder="e.g. Rent" />
+            </div>
+            <div class="form-group">
+              <label>Amount ($)</label>
+              <input type="number" id="rec-amount" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="rec-type">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="rec-category"></select>
+            </div>
+            <div class="form-group">
+              <label>Day of Month</label>
+              <input type="number" id="rec-day" placeholder="1" min="1" max="31" />
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="addRecurring()">+ Add Recurring</button>
+          <div id="recurring-list" style="margin-top:14px;">
+            <div class="empty"><span class="emoji">🔄</span>No recurring items.</div>
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:6px;" id="recurring-count"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <span>Transaction History</span>
+            <span id="tx-count" style="font-size:.78rem;color:var(--muted);font-weight:400;"></span>
+          </div>
+          <div class="filter-row" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label>Month</label>
+              <input type="month" id="filter-month" onchange="renderTable()" />
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="filter-category" onchange="renderTable()">
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="filter-type" onchange="renderTable()">
+                <option value="">All</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Search</label>
+              <input type="text" id="filter-search" placeholder="Search description..." oninput="renderTable()" />
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tx-body">
+                <tr><td colspan="6"><div class="empty"><span class="emoji">📭</span>No transactions yet.</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-income" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title">💵 Declare Income Source</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Source Name</label>
+              <input type="text" id="inc-name" placeholder="e.g. Day Job" />
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="inc-type">
+                <option value="Salary/Wages">Salary / Wages</option>
+                <option value="Freelance">Freelance / Contract</option>
+                <option value="Business">Business</option>
+                <option value="Investment">Investment / Dividends</option>
+                <option value="Rental">Rental Income</option>
+                <option value="Passive">Passive Income</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Frequency</label>
+              <select id="inc-frequency">
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="one-time">One-Time</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Amount ($)</label>
+              <input type="number" id="inc-amount" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label>How earnings are generated</label>
+              <textarea id="inc-description" placeholder="Describe how this income is earned..." rows="2" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--font-body);font-size:.85rem;resize:vertical;outline:none;"></textarea>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="saveIncomeSource()">💾 Save Source</button>
+            <button class="btn btn-sm" id="inc-cancel-btn" style="display:none;" onclick="cancelIncomeEdit()">Cancel</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <span>My Income Sources</span>
+            <span id="inc-summary-label" style="font-size:.8rem;color:var(--muted);font-weight:400;"></span>
+          </div>
+          <div id="inc-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-budgets" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title">🎯 Set Category Budget</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Category</label>
+              <select id="budget-category"></select>
+            </div>
+            <div class="form-group">
+              <label>Monthly Limit ($)</label>
+              <input type="number" id="budget-limit" placeholder="500" min="1" />
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="setBudget()">Save Budget</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Budget Progress</div>
+          <div class="goals-list" id="budgets-list">
+            <div class="empty"><span class="emoji">🎯</span>No budgets set yet.</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🏷️ Category Manager</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+            <input type="text" id="new-category-name" placeholder="New category name" style="flex:1;min-width:140px;" />
+            <button class="btn btn-primary btn-sm" onclick="addCategory()">+ Add</button>
+          </div>
+          <div id="category-list" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-goals" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title">🏆 New Goal</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Goal Name</label>
+              <input type="text" id="goal-name" placeholder="e.g. Emergency Fund" />
+            </div>
+            <div class="form-group">
+              <label>Target Amount ($)</label>
+              <input type="number" id="goal-target" placeholder="10000" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Saved So Far ($)</label>
+              <input type="number" id="goal-saved" placeholder="0" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Deadline</label>
+              <input type="date" id="goal-deadline" />
+            </div>
+            <div class="form-group">
+              <label>Icon</label>
+              <select id="goal-icon">
+                <option>🎯</option><option>🛡️</option><option>✈️</option>
+                <option>💻</option><option>🏠</option><option>🚗</option>
+                <option>🎓</option><option>💍</option><option>🏥</option>
+                <option>🎮</option><option>📚</option><option>🌍</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="addGoal()">🏆 Create Goal</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Goal Progress</div>
+          <div id="goal-progress-summary" style="margin-bottom:20px;"></div>
+          <div class="goals-list" id="goals-list">
+            <div class="empty"><span class="emoji">🎯</span>No goals yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-reports" style="display:none">
+      <div class="charts-grid">
+        <div class="chart-card wide">
+          <div class="chart-title">
+            Weekly Spending Pattern
+            <span class="chart-badge">Bar</span>
+          </div>
+          <div class="chart-wrap tall"><canvas id="weeklyChart"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="chart-title">
+            Category Comparison
+            <span class="chart-badge">Radar</span>
+          </div>
+          <div class="chart-wrap tall"><canvas id="radarChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-calendar" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>📅 Transaction Calendar</span>
+            <span style="font-size:.8rem;color:var(--muted);font-weight:400;" id="calendar-month-label"></span>
+          </div>
+          <div class="calendar-nav" style="display:flex;gap:8px;margin-bottom:14px;">
+            <button class="btn btn-sm" onclick="calendarMonth(-1)">‹ Prev</button>
+            <button class="btn btn-sm" onclick="calendarMonth(1)">Next ›</button>
+            <button class="btn btn-sm" onclick="calendarToday()">Today</button>
+          </div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+          <div id="calendar-day-detail" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-networth" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title">🏦 Net Worth Snapshot</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Cash & Bank ($)</label>
+              <input type="number" id="nw-cash" placeholder="0" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Investments ($)</label>
+              <input type="number" id="nw-investments" placeholder="0" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Property ($)</label>
+              <input type="number" id="nw-property" placeholder="0" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Loans Owed ($)</label>
+              <input type="number" id="nw-loans" placeholder="0" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Credit Card Debt ($)</label>
+              <input type="number" id="nw-credit" placeholder="0" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Other Liabilities ($)</label>
+              <input type="number" id="nw-other" placeholder="0" min="0" step="0.01" />
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="saveNetWorth()">💾 Save Snapshot</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Net Worth History</div>
+          <div class="chart-wrap tall"><canvas id="netWorthChart"></canvas></div>
+          <div id="networth-summary" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-debts" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title">💳 Add Debt</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Debt Name</label>
+              <input type="text" id="debt-name" placeholder="e.g. Car Loan" />
+            </div>
+            <div class="form-group">
+              <label>Total Owed ($)</label>
+              <input type="number" id="debt-total" placeholder="0" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Paid So Far ($)</label>
+              <input type="number" id="debt-paid" placeholder="0" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Interest Rate (%)</label>
+              <input type="number" id="debt-interest" placeholder="5.0" min="0" step="0.1" />
+            </div>
+            <div class="form-group">
+              <label>Min Monthly Payment ($)</label>
+              <input type="number" id="debt-min" placeholder="100" min="0" step="0.01" />
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="addDebt()">💳 Add Debt</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <span>Your Debts</span>
+            <span id="debts-total-label" style="font-size:.8rem;color:var(--muted);font-weight:400;"></span>
+          </div>
+          <div id="debts-summary" style="margin-bottom:16px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;">
+            <div id="debts-list"></div>
+            <div class="chart-wrap" style="max-width:220px;"><canvas id="debtChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-subscriptions" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title">📋 Add Subscription</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Service Name</label>
+              <input type="text" id="sub-name" placeholder="e.g. Netflix" />
+            </div>
+            <div class="form-group">
+              <label>Cost ($)</label>
+              <input type="number" id="sub-cost" placeholder="9.99" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Billing</label>
+              <select id="sub-cycle">
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="sub-category"></select>
+            </div>
+            <div class="form-group">
+              <label>Next Billing</label>
+              <input type="date" id="sub-date" />
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="addSubscription()">📋 Add</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Subscription Overview</div>
+          <div id="sub-summary" style="margin-bottom:16px;"></div>
+          <div id="sub-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-investments" style="display:none">
+      <div class="section-wrap">
+        <div class="panel">
+          <div class="panel-title">📈 Add Investment</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Ticker / Name</label>
+              <input type="text" id="inv-ticker" placeholder="e.g. AAPL" />
+            </div>
+            <div class="form-group">
+              <label>Shares</label>
+              <input type="number" id="inv-shares" placeholder="10" min="0" step="0.001" />
+            </div>
+            <div class="form-group">
+              <label>Cost Basis per Share ($)</label>
+              <input type="number" id="inv-cost" placeholder="150.00" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Current Price ($)</label>
+              <input type="number" id="inv-price" placeholder="175.00" min="0" step="0.01" />
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="addInvestment()">📈 Add</button>
+            <button class="btn btn-sm" onclick="refreshPrices()">🔄 Refresh Prices</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Portfolio Overview</div>
+          <div id="inv-summary" style="margin-bottom:16px;"></div>
+          <div id="inv-list"></div>
+          <div class="chart-wrap" style="margin-top:16px;max-width:380px;"><canvas id="invChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-admin" style="display:none">
+      <div class="section-wrap" id="admin-wrap">
+        <div class="panel" id="admin-key-panel">
+          <div class="panel-title">🔐 Admin Access</div>
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;">Enter the secret key to access user income data.</p>
+          <div style="display:flex;gap:8px;max-width:360px;">
+            <input type="password" id="admin-key-input" placeholder="Secret key" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--font-body);font-size:.9rem;outline:none;" onkeydown="if(event.key==='Enter')adminAuthenticate()" />
+            <button class="btn btn-primary" onclick="adminAuthenticate()">Unlock</button>
+          </div>
+          <div id="admin-key-error" style="color:var(--expense);font-size:.8rem;margin-top:8px;display:none;">Invalid key</div>
+        </div>
+        <div class="panel" id="admin-panel" style="display:none;">
+          <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>👥 Registered Users</span>
+            <button class="btn btn-sm" onclick="adminLogout()">🔒 Lock</button>
+          </div>
+          <div id="admin-user-list"></div>
+        </div>
+        <div class="panel" id="admin-user-detail" style="display:none;">
+          <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;">
+            <span id="admin-detail-title">User Detail</span>
+            <button class="btn btn-sm" onclick="adminBackToList()">← Back</button>
+          </div>
+          <div id="admin-detail-content"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="edit-modal" id="edit-modal">
+  <div class="edit-modal-content">
+    <div class="edit-modal-title">✏️ Edit Transaction</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="edit-desc" />
+      </div>
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" id="edit-amount" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="edit-type">
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="edit-category"></select>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="edit-date" />
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:16px;gap:8px;">
+      <button class="btn btn-primary" onclick="saveEdit()">💾 Save</button>
+      <button class="btn" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
